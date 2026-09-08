@@ -1,6 +1,5 @@
 from ..models.map_types import Zone, MapError, Hub, Link, HubType
 
-
 ALLOWED: dict[str, frozenset[str]] = {
     "nb_drones": frozenset(),
     "hub": frozenset({"zone", "color", "max_drones"}),
