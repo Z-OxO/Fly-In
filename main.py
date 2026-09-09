@@ -1,14 +1,14 @@
 import sys
 from srcs.parsing import MapBuilder, MapLoader
 from srcs.models import MapError
-from srcs.gui.gui_renderer import GuiRenderer
+from srcs.ui.gui_renderer import GuiRenderer
 from pathlib import Path
 
 
 def main() -> None:
     try:
         lines = MapLoader.load(
-            Path("data") / "maps" / "medium" / "03_priority_puzzle.txt"
+            Path("data") / "maps" / "hard" / "03_ultimate_challenge.txt"
         )
         map_fly = MapBuilder(lines).build()
     except MapError as e:
