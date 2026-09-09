@@ -1,7 +1,7 @@
 import sys
 from srcs.parsing import MapBuilder, MapLoader
 from srcs.models import MapError
-from srcs.ui.gui_renderer import GuiRenderer
+from srcs.ui.gui.gui_renderer import GuiRenderer
 from pathlib import Path
 
 

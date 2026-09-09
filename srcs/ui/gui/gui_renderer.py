@@ -4,7 +4,7 @@ from typing import TypeAlias
 
 from srcs.models import Plan
 from srcs.models.map_types import MapFlyIn, Hub
-from .renderer import Renderer
+from ..renderer import Renderer
 from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget
 from .models import Point
 
