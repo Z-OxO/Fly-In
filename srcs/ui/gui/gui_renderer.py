@@ -2,10 +2,9 @@ import pygame
 from pygame import Surface, Clock, Font
 from typing import TypeAlias
 
-from srcs.models import Plan
-from srcs.models.map_types import MapFlyIn, Hub
+from srcs.models import MapFlyIn, Hub, Plan
 from ..renderer import Renderer
-from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget
+from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget, DroneWidget
 from .models import Point
 
 RGB: TypeAlias = tuple[int, int, int]
@@ -58,7 +57,7 @@ class GuiRenderer(Renderer):
 
         pygame.init()
         info = pygame.display.Info()
-        self._size = Point(info.current_w / 2, info.current_h / 2)
+        self._size = Point(info.current_w / 1.5, info.current_h / 1.5)
         self._screen: Surface = pygame.display.set_mode(
             (int(self._size.x), int(self._size.y))
         )
@@ -91,27 +90,43 @@ class GuiRenderer(Renderer):
             for link in self._map.links.values()
         ]
         nodes: list[Widget] = [
-            HubWidget(place(hub), hub.color, radius) for hub in hubs.values()
+            HubWidget(place(hub), hub.color, hub.zone, radius)
+            for hub in hubs.values()
         ]
-        return edges + nodes
 
-    def run(self):
+        start = self._map.start_hub
 
+        start = self._viewport.place(self._map.start_hub)
+        self._drones = {
+            i: DroneWidget(start, "orange", self._viewport.radius * 0.32)
+            for i in range(1, self._map.nb_drone + 1)
+        }
+        return edges + nodes + list(self._drones.values())
+
+    def run(self) -> None:
         self._widgets = self._build_widgets()
+
         while self._running:
+            dt = min(self._clock.tick(60) / 1000.0, 0.05)
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self._running = False
 
-            self._clock.tick(60)
+            for widget in self._widgets:
+                widget.update(dt)
+
             self._screen.fill("black")
             for widget in self._widgets:
                 widget.draw(self._screen)
-            self._debug.set_lines([
-                f"hubs: {len(self._map.hubs)}",
-                f"links: {len(self._map.links)}",
-                f"drones: {self._map.nb_drone}",
-                f"fps: {self._clock.get_fps():.0f}",
-            ])
+
+            self._debug.set_lines(
+                [
+                    f"hubs: {len(self._map.hubs)}",
+                    f"links: {len(self._map.links)}",
+                    f"drones: {self._map.nb_drone}",
+                    f"fps: {self._clock.get_fps():.0f}",
+                ]
+            )
             self._debug.draw(self._screen)
             pygame.display.flip()

@@ -1,6 +1,5 @@
 from typing import NamedTuple, TypeAlias
 
-
 RGB: TypeAlias = tuple[int, int, int]
 
 

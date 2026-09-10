@@ -1,8 +1,10 @@
 import pygame
+from pygame.math import smoothstep
 from pygame import Surface, Font
 from abc import ABC, abstractmethod
-from .constants import PALETTE
+from .constants import PALETTE, ZONE_STYLE
 from .models import Point, RGB
+from srcs.models import Zone
 
 
 class Widget(ABC):
@@ -10,6 +12,8 @@ class Widget(ABC):
         # self._dirty = False
         self._visible = True
         self._palette = PALETTE
+
+    def update(self, dt: float) -> None: ...
 
     @abstractmethod
     def draw(self, surface: Surface) -> None: ...
@@ -38,28 +42,24 @@ class EdgeWidget(Widget):
 
 
 class HubWidget(Widget):
-    def __init__(self, pos: Point, color: str | None, radius: float) -> None:
+    def __init__(
+        self, pos: Point, color: str | None, zone: Zone, radius: float
+    ) -> None:
         super().__init__()
         self.pos: Point = pos
-        color = color or "white"
-        self._fill_color: RGB = self._palette.get(
-            color, self._palette["white"]
-        ).fill
-        self._ring_color: RGB = self._palette.get(
-            color, self._palette["white"]
-        ).ring
+        swatch = self._palette.get(color or "white", self._palette["white"])
+        self._fill_color: RGB = swatch.fill
+        self._ring_color, self._ring_width = ZONE_STYLE[zone]
         self._radius: float = radius
 
     def draw(self, surface: Surface):
-        pygame.draw.aacircle(
-            surface, self._fill_color, (self.pos.x, self.pos.y), self._radius
-        )
+        pygame.draw.aacircle(surface, self._fill_color, self.pos, self._radius)
         pygame.draw.aacircle(
             surface,
             self._ring_color,
             (self.pos.x, self.pos.y),
             self._radius,
-            3,
+            self._ring_width,
         )
 
 
@@ -83,3 +83,34 @@ class TextWidget(Widget):
                 self._font.render(line, True, self._color), (self._pos.x, y)
             )
             y += self._font.get_linesize()
+
+
+class DroneWidget(Widget):
+    def __init__(self, pos: Point, color: str, radius: float) -> None:
+        swatch = PALETTE.get(color or "white", PALETTE["white"])
+        self._color: RGB = swatch.fill
+        self._to_pos = self._from_pos = pos
+        self._radius: float = radius
+        self._t: float = 1
+        self._duration: float = 1
+
+    @property
+    def pos(self) -> Point:
+        return Point(
+            smoothstep(self._from_pos.x, self._to_pos.x, self._t),
+            smoothstep(self._from_pos.y, self._to_pos.y, self._t),
+        )
+
+    def move_to(self, target: Point, duration: float):
+        self._from_pos = self.pos
+        self._to_pos = target
+        self._t = 0.0
+        self._duration = max(0.1, duration)
+
+    def update(self, dt: float) -> None:
+        if self._t >= 1.0:
+            return
+        self._t += dt / self._duration
+
+    def draw(self, surface: Surface) -> None:
+        pygame.draw.aacircle(surface, self._color, self.pos, self._radius)

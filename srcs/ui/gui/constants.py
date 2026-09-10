@@ -1,4 +1,5 @@
-from .models import Swatch
+from .models import Swatch, RGB
+from srcs.models import Zone
 
 PALETTE: dict[str, Swatch] = {
     "red": Swatch(fill=(255, 106, 106), ring=(255, 166, 166)),
@@ -10,4 +11,12 @@ PALETTE: dict[str, Swatch] = {
     "purple": Swatch(fill=(186, 142, 246), ring=(214, 187, 250)),
     "pink": Swatch(fill=(250, 150, 186), ring=(252, 192, 214)),
     "white": Swatch(fill=(238, 242, 250), ring=(245, 247, 252)),
+}
+
+
+ZONE_STYLE: dict[Zone, tuple[RGB, int]] = {
+    Zone.NORMAL: ((180, 180, 190), 2),
+    Zone.PRIORITY: ((120, 230, 150), 3),
+    Zone.RESTRICTED: ((255, 140, 60), 4),
+    Zone.BLOCKED: ((90, 90, 100), 2),
 }
