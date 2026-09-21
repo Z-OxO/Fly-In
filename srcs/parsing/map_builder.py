@@ -63,7 +63,7 @@ class MapBuilder:
         if self._nb_drones is None:
             raise MapError(0, "no nb_drones defined")
         return MapFlyIn(
-            nb_drone=self._nb_drones,
+            nb_drones=self._nb_drones,
             start_hub=self._start_hub,
             end_hub=self._end_hub,
             hubs=self._hubs,

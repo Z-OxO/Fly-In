@@ -129,7 +129,7 @@ class LineParser:
         return Link(
             from_hub,
             to_hub,
-            self._capacity(metadata, "max_link_drones"),
+            self._capacity(metadata, "max_link_capacity"),
         )
 
     def _nb_drones(self, line_data: str) -> int:
