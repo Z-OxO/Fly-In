@@ -70,7 +70,6 @@ class Network:
             cost = map_fly.hubs[dst].zone.cost
             if cost is None:
                 continue
-            print(link.max_link_capacity)
             self.add_pair(
                 cost, link.max_link_capacity, self._exit(src), self._entry(dst)
             )
