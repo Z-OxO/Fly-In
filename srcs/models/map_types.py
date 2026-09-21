@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TypeAlias
 
+Cost: TypeAlias = tuple[int, int]
+
 
 class MapError(Exception):
     def __init__(self, linenum: int, msg: str) -> None:
@@ -13,6 +15,18 @@ class Zone(Enum):
     PRIORITY = "priority"
     RESTRICTED = "restricted"
     BLOCKED = "blocked"
+
+    @property
+    def cost(self) -> Cost | None:
+        match self:
+            case Zone.NORMAL:
+                return (1, 1)
+            case Zone.PRIORITY:
+                return (1, 0)
+            case Zone.RESTRICTED:
+                return (2, 1)
+            case Zone.BLOCKED:
+                return None
 
 
 class HubType(Enum):
@@ -44,7 +58,7 @@ Neighbor: TypeAlias = tuple[tuple[str, Link], ...]
 
 @dataclass(frozen=True)
 class MapFlyIn:
-    nb_drone: int
+    nb_drones: int
     start_hub: Hub
     end_hub: Hub
     hubs: dict[str, Hub]
