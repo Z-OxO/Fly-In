@@ -78,7 +78,7 @@ class GuiRenderer(Renderer):
         place = self._viewport.place
         hubs = self._map.hubs
         radius = self._viewport.radius
-        width = max(1, int(0.10 * self._viewport._scale))
+        width = min(30, max(1, int(0.10 * self._viewport._scale)))
 
         edges: list[Widget] = [
             EdgeWidget(
@@ -99,12 +99,13 @@ class GuiRenderer(Renderer):
         start = self._viewport.place(self._map.start_hub)
         self._drones = {
             i: DroneWidget(start, "orange", self._viewport.radius * 0.32)
-            for i in range(1, self._map.nb_drone + 1)
+            for i in range(1, self._map.nb_drones + 1)
         }
         return edges + nodes + list(self._drones.values())
 
     def run(self) -> None:
         self._widgets = self._build_widgets()
+        self._drones[1].move_to(Point(500, 500), 3)
 
         while self._running:
             dt = min(self._clock.tick(60) / 1000.0, 0.05)
@@ -124,7 +125,7 @@ class GuiRenderer(Renderer):
                 [
                     f"hubs: {len(self._map.hubs)}",
                     f"links: {len(self._map.links)}",
-                    f"drones: {self._map.nb_drone}",
+                    f"drones: {self._map.nb_drones}",
                     f"fps: {self._clock.get_fps():.0f}",
                 ]
             )
