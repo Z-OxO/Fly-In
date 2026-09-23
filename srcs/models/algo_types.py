@@ -16,6 +16,7 @@ class Edge:
 
 @dataclass
 class Network:
+    nb_drones: int
     edges: dict[tuple[str, str], Edge]
     neighbors: dict[str, list[str]]
     source: str
@@ -29,6 +30,11 @@ class Network:
     def _exit(hub: str) -> str:
         return f"{hub}-out"
 
+    def push_network(self, path: list[str], unit: int) -> None:
+        for u, v in zip(path, path[1:]):
+            self.edges[(u, v)].cap -= unit
+            self.edges[(v, u)].cap += unit
+
     def add_pair(
         self,
         cost: Cost,
@@ -41,7 +47,7 @@ class Network:
         self.neighbors.setdefault(from_hub, []).append(to_hub)
         self.neighbors.setdefault(to_hub, []).append(from_hub)
 
-    def add_hub(self, hub: Hub, nb_drones: int) -> None:
+    def _add_hub(self, hub: Hub, nb_drones: int) -> None:
 
         if hub.zone is Zone.BLOCKED or hub.zone.cost is None:
             return
@@ -57,7 +63,7 @@ class Network:
             Network._exit(hub.name),
         )
 
-    def add_link(
+    def _add_link(
         self,
         map_fly: MapFlyIn,
         link: Link,
@@ -78,11 +84,41 @@ class Network:
     def from_map(cls, map_fly: MapFlyIn) -> "Network":
         source = cls._entry(map_fly.start_hub.name)
         sink = cls._exit(map_fly.end_hub.name)
-        network = cls({}, {source: [], sink: []}, source, sink)
+        network = cls(
+            map_fly.nb_drones, {}, {source: [], sink: []}, source, sink
+        )
 
         for hub in map_fly.hubs.values():
-            network.add_hub(hub, map_fly.nb_drones)
+            network._add_hub(hub, map_fly.nb_drones)
         for link in map_fly.links.values():
-            network.add_link(map_fly, link)
+            network._add_link(map_fly, link)
 
         return network
+
+    def _flot_neighboor(self, u: str) -> str | None:
+        for v in self.neighbors[u]:
+            if self.edges[u, v].is_real and self.edges[v, u].cap > 0:
+                return v
+        return None
+
+    def _find_route(self) -> list[tuple[int, str]] | None:
+        steps: list[tuple[int, str]] = []
+        u, turns = self.source, 0
+        if self._flot_neighboor(u) is None:
+            return None
+        while u != self.sink:
+            n = self._flot_neighboor(u)
+            if n is None:
+                return None
+            self.push_network([u, n], -1)
+            if self.edges[u, n].cost[0] > 0:
+                turns += 1
+                steps.append((turns, f"{u.split('-')[0]}-{n.split('-')[0]}"))
+            u = n
+        return steps
+
+    def decompose(self) -> list[list[tuple[int, str]]]:
+        routes: list[list[tuple[int, str]]] = []
+        while route := self._find_route():
+            routes.append(route)
+        return routes
