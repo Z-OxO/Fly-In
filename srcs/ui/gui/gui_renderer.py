@@ -66,9 +66,12 @@ class GuiRenderer(Renderer):
         self._viewport: ViewPort = ViewPort(
             self._size, list(self._map.hubs.values())
         )
-        self._font: Font = pygame.font.SysFont("monospace", 14)
+        self._font: Font = pygame.font.SysFont("monospace", 25)
         self._debug: TextWidget = TextWidget(self._font, Point(10.0, 10.0))
-        self._widgets: list[Widget] = []
+        self._widgets: list[Widget] = self._build_widgets()
+        self._position_plan: list[dict[int, Point]] = self._build_positions(
+            fly_map.start_hub.name
+        )
 
     @property
     def size(self) -> Point:
@@ -89,23 +92,39 @@ class GuiRenderer(Renderer):
             )
             for link in self._map.links.values()
         ]
-        nodes: list[Widget] = [
-            HubWidget(place(hub), hub.color, hub.zone, radius)
-            for hub in hubs.values()
-        ]
-
-        start = self._map.start_hub
-
+        self._nodes: dict[str, HubWidget] = {
+            name: HubWidget(place(hub), hub.color, hub.zone, radius)
+            for name, hub in hubs.items()
+        }
         start = self._viewport.place(self._map.start_hub)
         self._drones = {
             i: DroneWidget(start, "orange", self._viewport.radius * 0.32)
             for i in range(1, self._map.nb_drones + 1)
         }
-        return edges + nodes + list(self._drones.values())
+        return edges + list(self._nodes.values()) + list(self._drones.values())
+
+    def _build_positions(self, start: str) -> list[dict[int, Point]]:
+        current: dict[int, Point] = {
+            d: self._nodes[start].pos for d in self._drones
+        }
+        positions = [dict(current)]
+        for turn in self._plan:
+            for drone_id, label in turn:
+                if "-" in label:
+                    u, v = label.split("-")
+                    (x1, y1), (x2, y2) = self._nodes[u].pos, self._nodes[v].pos
+                    current[drone_id] = Point((x1 + x2) / 2, (y1 + y2) / 2)
+                else:
+                    current[drone_id] = self._nodes[label].pos
+            positions.append(dict(current))
+        return positions
+
+    def move_drones(self, turn: int) -> None:
+        for drone_id, pos in self._position_plan[turn].items():
+            self._drones[drone_id].move_to(pos, 0.75)
 
     def run(self) -> None:
-        self._widgets = self._build_widgets()
-        self._drones[1].move_to(Point(500, 500), 3)
+        turn = 0
 
         while self._running:
             dt = min(self._clock.tick(60) / 1000.0, 0.05)
@@ -113,11 +132,18 @@ class GuiRenderer(Renderer):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self._running = False
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_RIGHT:
+                        turn = min(len(self._plan), turn + 1)
+                        self.move_drones(turn)
+                    if event.key == pygame.K_LEFT:
+                        turn = max(0, turn - 1)
+                        self.move_drones(turn)
 
             for widget in self._widgets:
                 widget.update(dt)
 
-            self._screen.fill("black")
+            self._screen.fill((14, 17, 17))
             for widget in self._widgets:
                 widget.draw(self._screen)
 
@@ -126,6 +152,7 @@ class GuiRenderer(Renderer):
                     f"hubs: {len(self._map.hubs)}",
                     f"links: {len(self._map.links)}",
                     f"drones: {self._map.nb_drones}",
+                    f"turns: {turn}/{len(self._position_plan) - 1}",
                     f"fps: {self._clock.get_fps():.0f}",
                 ]
             )

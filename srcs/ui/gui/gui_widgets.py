@@ -31,7 +31,7 @@ class EdgeWidget(Widget):
         self._color = self._palette.get(color, self._palette["white"]).fill
         self._width = width
 
-    def draw(self, surface: Surface):
+    def draw(self, surface: Surface) -> None:
         pygame.draw.aaline(
             surface,
             self._color,
@@ -52,7 +52,7 @@ class HubWidget(Widget):
         self._ring_color, self._ring_width = ZONE_STYLE[zone]
         self._radius: float = radius
 
-    def draw(self, surface: Surface):
+    def draw(self, surface: Surface) -> None:
         pygame.draw.aacircle(surface, self._fill_color, self.pos, self._radius)
         pygame.draw.aacircle(
             surface,
@@ -101,7 +101,7 @@ class DroneWidget(Widget):
             smoothstep(self._from_pos.y, self._to_pos.y, self._t),
         )
 
-    def move_to(self, target: Point, duration: float):
+    def move_to(self, target: Point, duration: float) -> None:
         self._from_pos = self.pos
         self._to_pos = target
         self._t = 0.0
