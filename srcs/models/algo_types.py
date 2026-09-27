@@ -14,6 +14,15 @@ class Edge:
     is_real: bool
 
 
+@dataclass(frozen=True)
+class Route:
+    steps: tuple[tuple[int, str], ...]
+
+    @property
+    def length(self) -> int:
+        return self.steps[-1][0]
+
+
 @dataclass
 class Network:
     nb_drones: int
@@ -101,7 +110,7 @@ class Network:
                 return v
         return None
 
-    def _find_route(self) -> list[tuple[int, str]] | None:
+    def _find_route(self) -> Route | None:
         steps: list[tuple[int, str]] = []
         u, turns = self.source, 0
         if self._flot_neighboor(u) is None:
@@ -112,13 +121,16 @@ class Network:
                 return None
             self.push_network([u, n], -1)
             if self.edges[u, n].cost[0] > 0:
-                turns += 1
+                if self.edges[u, n].cost == Zone.RESTRICTED.cost:
+                    turns += 2
+                else:
+                    turns += 1
                 steps.append((turns, f"{u.split('-')[0]}-{n.split('-')[0]}"))
             u = n
-        return steps
+        return Route(tuple(steps))
 
-    def decompose(self) -> list[list[tuple[int, str]]]:
-        routes: list[list[tuple[int, str]]] = []
+    def decompose(self) -> list[Route]:
+        routes: list[Route] = []
         while route := self._find_route():
             routes.append(route)
         return routes
