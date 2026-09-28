@@ -1,5 +1,5 @@
 from .models import Swatch, RGB
-from srcs.models import Zone
+from src.models import Zone
 
 PALETTE: dict[str, Swatch] = {
     "red": Swatch(fill=(255, 106, 106), ring=(255, 166, 166)),

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Generator
 
-from srcs.models.map_types import MapError
+from src.models.map_types import MapError
 
 
 class MapLoader:

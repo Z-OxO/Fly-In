@@ -1,7 +1,7 @@
 import os
 import sys
 
-from srcs.models import Hub, MapFlyIn, Plan
+from src.models import Hub, MapFlyIn, Plan
 from ..renderer import Renderer
 
 

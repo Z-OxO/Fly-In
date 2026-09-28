@@ -4,13 +4,13 @@ from pathlib import Path
 from pygame import Clock, Font, Surface
 from typing import TypeAlias
 
-from srcs.models import MapFlyIn, Hub, Plan
-from srcs.ui.session import Session
+from src.models import MapFlyIn, Hub, Plan
+from src.ui.session import Session
 from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget, DroneWidget
 from .pygame_gui_theme import THEME
 from ..renderer import Renderer
 from .models import Point
-from srcs.models import MapError
+from src.models import MapError
 
 RGB: TypeAlias = tuple[int, int, int]
 

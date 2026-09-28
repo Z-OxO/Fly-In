@@ -4,7 +4,7 @@ from pygame import Surface, Font
 from abc import ABC, abstractmethod
 from .constants import PALETTE, ZONE_STYLE
 from .models import Point, RGB
-from srcs.models import Zone
+from src.models import Zone
 
 
 class Widget(ABC):

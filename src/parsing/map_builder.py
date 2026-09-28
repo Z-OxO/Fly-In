@@ -1,4 +1,4 @@
-from srcs.models import Hub, Link, MapError, HubType, MapFlyIn
+from src.models import Hub, Link, MapError, HubType, MapFlyIn
 from .line_parser import LineParser
 
 

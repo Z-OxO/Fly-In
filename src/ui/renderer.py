@@ -1,4 +1,4 @@
-from srcs.models import MapFlyIn, Plan
+from src.models import MapFlyIn, Plan
 from abc import abstractmethod, ABC
 
 

@@ -1,8 +1,8 @@
 from typing import Type
 
 from .shortest_path_algo import ShortestPathAlgo
-from srcs.models import Network, Plan, Move
-from srcs.models import MapFlyIn
+from src.models import Network, Plan, Move
+from src.models import MapFlyIn
 
 
 class NoSolutionFind(Exception):

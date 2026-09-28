@@ -1,15 +1,15 @@
 import sys
 
-from srcs.ui.session import Session
-from srcs.models import MapError
-from srcs.ui.gui.gui_renderer import GuiRenderer
-from srcs.ui.tui.tui_renderer import TuiRenderer
+from src.ui.session import Session
+from src.models import MapError
+from src.ui.gui.gui_renderer import GuiRenderer
+from src.ui.tui.tui_renderer import TuiRenderer
 from pathlib import Path
-from srcs.algo.shortest_path_algo import Spfa
-from srcs.algo.pathfinder import Pathfinder
+from src.algo.shortest_path_algo import Spfa
+from src.algo.pathfinder import Pathfinder
 
 
-def main() -> None:
+def main() -> int:
     session = Session(Pathfinder(Spfa))
     gui = GuiRenderer(session)
     session.subscribe(gui)
@@ -23,13 +23,14 @@ def main() -> None:
         )
     except (MapError, ValueError) as e:
         print(e)
-        sys.exit(1)
+        return 1
     gui.run()
+    return 0
 
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except Exception as e:
         print(f"Execpected error occured: {e}")
     except KeyboardInterrupt:

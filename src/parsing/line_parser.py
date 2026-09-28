@@ -1,4 +1,4 @@
-from srcs.models import Zone, MapError, Hub, Link, HubType
+from src.models import Zone, MapError, Hub, Link, HubType
 
 ALLOWED: dict[str, frozenset[str]] = {
     "nb_drones": frozenset(),

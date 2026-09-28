@@ -1,14 +1,13 @@
 from typing import Protocol
 from pathlib import Path
 
-from srcs.models import Plan, MapFlyIn
-from srcs.algo.pathfinder import Pathfinder
-from srcs.parsing import MapBuilder, MapLoader
+from src.models import Plan, MapFlyIn
+from src.algo.pathfinder import Pathfinder
+from src.parsing import MapBuilder, MapLoader
 
 
 class MapListener(Protocol):
-    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None:
-        ...
+    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None: ...
 
 
 class Session:
