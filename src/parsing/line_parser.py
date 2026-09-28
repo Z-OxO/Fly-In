@@ -53,6 +53,8 @@ class LineParser:
             raise self._error("unclosed metadata block: missing ']'")
         if "[" in metadata:
             raise self._error("nested or repeated '[' in metadata block")
+        if "[" in metadata or "]" in metadata[:-1]:
+            raise self._error("nested or repeated bracket in metadata block")
 
         listing = ", ".join(sorted(allowed))
         metadata_dict: dict[str, str] = {}
@@ -117,14 +119,13 @@ class LineParser:
     def _link(self, line_data: str, metadata: dict[str, str]) -> Link:
         from_hub, dash, to_hub = line_data.partition("-")
 
-        if not dash or "-" in from_hub or " " in from_hub or " " in to_hub:
+        if not dash or "-" in to_hub or " " in line_data:
             raise self._error(
-                "link data malformated "
-                f"has to be from_hub-to_hub got: {line_data}"
+                "connection expects exactly 'zone1-zone2' "
+                f"(no spaces, one '-') got: {line_data!r}"
             )
-
         if not from_hub or not to_hub:
-            raise self._error(f"link missing hub got: {line_data}")
+            raise self._error(f"connection missing a zone name: {line_data!r}")
 
         return Link(
             from_hub,

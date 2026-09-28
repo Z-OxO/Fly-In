@@ -86,6 +86,9 @@ class GuiRenderer(Renderer):
             return current.relative_to(folder).as_posix()
         return current.as_posix()
 
+    def close(self) -> None:
+        pygame.quit()
+
     def on_map_loaded(
         self, map_fly: MapFlyIn, plan: Plan, curr_map: Path
     ) -> None:

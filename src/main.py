@@ -29,11 +29,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"GUI unavailable ({e}), terminal only", file=sys.stderr)
     try:
         session.load(args.map)
+        if gui is not None:
+            gui.run()
     except (MapError, NoSolutionFind) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
-    if gui is not None:
-        gui.run()
+    finally:
+        if gui is not None:
+            gui.close()
     return 0
 
 
