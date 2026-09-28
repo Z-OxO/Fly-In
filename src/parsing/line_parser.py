@@ -51,8 +51,6 @@ class LineParser:
         metadata = metadata.strip()
         if not metadata.endswith("]"):
             raise self._error("unclosed metadata block: missing ']'")
-        if "[" in metadata:
-            raise self._error("nested or repeated '[' in metadata block")
         if "[" in metadata or "]" in metadata[:-1]:
             raise self._error("nested or repeated bracket in metadata block")
 

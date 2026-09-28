@@ -1,3 +1,4 @@
+import os
 import argparse
 import sys
 
@@ -19,6 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     session.subscribe(TuiRenderer())
     gui = None
     if not args.no_gui:
+        os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         import pygame
         from src.ui.gui.gui_renderer import GuiRenderer
 
