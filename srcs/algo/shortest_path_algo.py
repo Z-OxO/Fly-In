@@ -1,7 +1,8 @@
-from ..models.algo_types import Network
-from ..models.map_types import Cost
 from collections import deque
 from abc import abstractmethod, ABC
+
+from srcs.models import Network
+from srcs.models import Cost
 
 
 class ShortestPathAlgo(ABC):

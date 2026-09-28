@@ -7,12 +7,10 @@ from typing import TypeAlias
 from srcs.models import MapFlyIn, Hub, Plan
 from srcs.ui.session import Session
 from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget, DroneWidget
-from .py_game_gui import THEME
-from .models import Point
+from .pygame_gui_theme import THEME
 from ..renderer import Renderer
-from srcs.parsing import MapLoader, MapBuilder
+from .models import Point
 from srcs.models import MapError
-from srcs.algo.pathfinder import Pathfinder
 
 RGB: TypeAlias = tuple[int, int, int]
 
@@ -178,8 +176,7 @@ class GuiRenderer(Renderer):
             self._running = False
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and self._maps:
             path = Path(self._folder / event.text)
-            if self._handle_dropdown(path):
-                self._turn = 0
+            self._handle_dropdown(path)
         elif event.type == pygame.KEYUP:
             self._handle_keys(event.key)
         self._ui_manager.process_events(event)

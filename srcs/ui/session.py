@@ -7,7 +7,7 @@ from srcs.parsing import MapBuilder, MapLoader
 
 
 class MapListener(Protocol):
-    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan):
+    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None:
         ...
 
 

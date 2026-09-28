@@ -22,7 +22,7 @@ class TuiRenderer(Renderer):
         self._plan = plan
         self._hubs_caps = self._build_hubs_caps()
         self._clear_terminal()
-        self._gen_output()
+        self._print_output()
 
     def _build_hubs_caps(self) -> dict[str, tuple[int, int]]:
         hubs: dict[str, Hub] = self._map.hubs
@@ -32,7 +32,7 @@ class TuiRenderer(Renderer):
             hubs_caps[name] = 0, hub.max_drones
         return hubs_caps
 
-    def _gen_output(self):
+    def _print_output(self) -> None:
 
         output = "\n".join(
             " ".join(

@@ -28,4 +28,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Execpected error occured: {e}")
+    except KeyboardInterrupt:
+        print("Bye ;3")
