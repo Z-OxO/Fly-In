@@ -29,6 +29,7 @@ def main(argv: list[str] | None = None) -> int:
             session.subscribe(gui)
         except pygame.error as e:
             print(f"GUI unavailable ({e}), terminal only", file=sys.stderr)
+            pygame.quit()
     try:
         session.load(args.map)
         if gui is not None:
