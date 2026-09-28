@@ -1,10 +1,11 @@
 import pygame
 import pygame_gui
 from pathlib import Path
-from pygame import Surface, Clock, Font
+from pygame import Clock, Font, Surface
 from typing import TypeAlias
 
 from srcs.models import MapFlyIn, Hub, Plan
+from srcs.ui.session import Session
 from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget, DroneWidget
 from .py_game_gui import THEME
 from .models import Point
@@ -57,9 +58,7 @@ class ViewPort:
 
 
 class GuiRenderer(Renderer):
-
-    def __init__(self, fly_map: MapFlyIn, pathfinder: Pathfinder) -> None:
-        super().__init__(fly_map, pathfinder)
+    def __init__(self, session: Session) -> None:
 
         pygame.init()
         info = pygame.display.Info()
@@ -67,25 +66,28 @@ class GuiRenderer(Renderer):
         self._screen: Surface = pygame.display.set_mode(
             (int(self._size.x), int(self._size.y))
         )
+        self._session = session
         self._ui_manager = pygame_gui.UIManager(
             (int(self._size.x), int(self._size.y)), theme_path=THEME
         )
         self._clock: Clock = pygame.time.Clock()
         self._running: bool = True
         self._turn: int = 0
-        self._viewport: ViewPort = ViewPort(
-            self._size, list(self._map.hubs.values())
-        )
         self._font: Font = pygame.font.SysFont("monospace", 25)
         self._debug: TextWidget = TextWidget(self._font, Point(10.0, 10.0))
-        self._widgets: list[Widget] = self._build_widgets()
-        self._position_plan: list[dict[int, Point]] = self._build_positions(
-            fly_map.start_hub.name, self._pathfinder.scheduler(fly_map)
-        )
 
     @property
     def size(self) -> Point:
         return self._size
+
+    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None:
+        self._map = map_fly
+        self._turn = 0
+        self._viewport = ViewPort(self._size, list(map_fly.hubs.values()))
+        self._widgets: list[Widget] = self._build_widgets()
+        self._position_plan: list[dict[int, Point]] = self._build_positions(
+            map_fly.start_hub.name, plan
+        )
 
     def _build_widgets(self) -> list[Widget]:
         place = self._viewport.place
@@ -133,22 +135,11 @@ class GuiRenderer(Renderer):
             positions.append(dict(current))
         return positions
 
-    def _handle_dropdown(self, path: Path) -> bool:
+    def _handle_dropdown(self, path: Path) -> None:
         try:
-            lines = MapLoader.load(path)
-            fly_map = MapBuilder(lines).build()
-            plan = self._pathfinder.scheduler(fly_map)
+            self._session.load(path)
         except (MapError, ValueError) as e:
             print(f"{path}: {e}")
-            return False
-
-        self._map = fly_map
-        self._viewport = ViewPort(self._size, list(fly_map.hubs.values()))
-        self._widgets = self._build_widgets()
-        self._position_plan = self._build_positions(
-            fly_map.start_hub.name, plan
-        )
-        return True
 
     def move_drones(self, turn: int) -> None:
         for drone_id, pos in self._position_plan[turn].items():
