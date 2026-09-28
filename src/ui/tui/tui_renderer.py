@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 from src.models import Hub, MapFlyIn, Plan
 from ..renderer import Renderer
@@ -17,7 +18,10 @@ class TuiRenderer(Renderer):
             sys.stdout.write("\033[H\033[2J\033[3J")
             sys.stdout.flush()
 
-    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None:
+    def on_map_loaded(
+        self, map_fly: MapFlyIn, plan: Plan, curr_map: Path
+    ) -> None:
+        self._curr_map = curr_map
         self._map = map_fly
         self._plan = plan
         self._hubs_caps = self._build_hubs_caps()

@@ -15,4 +15,5 @@ def timing(f: Callable[P, R]) -> Callable[P, R]:
         te = time()
         print("func:%r  took: %2.4f sec" % (f.__name__, te - ts))
         return result
+
     return wrap

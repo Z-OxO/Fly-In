@@ -1,13 +1,7 @@
 from typing import Type
 
 from .shortest_path_algo import ShortestPathAlgo
-from src.models import Network, Plan, Move
-from src.models import MapFlyIn
-
-
-class NoSolutionFind(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
+from src.models import Network, Plan, Move, MapFlyIn, NoSolutionFind
 
 
 class Pathfinder:

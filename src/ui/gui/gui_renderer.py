@@ -4,13 +4,12 @@ from pathlib import Path
 from pygame import Clock, Font, Surface
 from typing import TypeAlias
 
-from src.models import MapFlyIn, Hub, Plan
+from src.models import MapFlyIn, Hub, Plan, MapError, NoSolutionFind
+from .models import Point
 from src.ui.session import Session
 from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget, DroneWidget
 from .pygame_gui_theme import THEME
 from ..renderer import Renderer
-from .models import Point
-from src.models import MapError
 
 RGB: TypeAlias = tuple[int, int, int]
 
@@ -78,7 +77,18 @@ class GuiRenderer(Renderer):
     def size(self) -> Point:
         return self._size
 
-    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None:
+    @property
+    def current_map_path(self) -> str:
+        return (
+            self._curr_map.relative_to(self._folder).as_posix()
+            if self._maps
+            else "(no map)"
+        )
+
+    def on_map_loaded(
+        self, map_fly: MapFlyIn, plan: Plan, curr_map: Path
+    ) -> None:
+        self._curr_map = curr_map
         self._map = map_fly
         self._turn = 0
         self._viewport = ViewPort(self._size, list(map_fly.hubs.values()))
@@ -136,7 +146,7 @@ class GuiRenderer(Renderer):
     def _handle_dropdown(self, path: Path) -> None:
         try:
             self._session.load(path)
-        except (MapError, ValueError) as e:
+        except (MapError, NoSolutionFind, ValueError) as e:
             print(f"{path}: {e}")
 
     def move_drones(self, turn: int) -> None:
@@ -157,7 +167,7 @@ class GuiRenderer(Renderer):
         height, margin = 40, 20
         pygame_gui.elements.UIDropDownMenu(
             options_list=options,
-            starting_option=self._maps[1] if self._maps else "(aucune map)",
+            starting_option=self.current_map_path,
             relative_rect=pygame.Rect(-width - margin, margin, width, height),
             manager=self._ui_manager,
             anchors={"right": "right", "top": "top"},

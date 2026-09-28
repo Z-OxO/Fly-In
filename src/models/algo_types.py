@@ -7,6 +7,11 @@ Turn: TypeAlias = tuple[Move, ...]
 Plan: TypeAlias = tuple[Turn, ...]
 
 
+class NoSolutionFind(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 @dataclass
 class Edge:
     cap: int

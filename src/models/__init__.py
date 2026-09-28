@@ -1,5 +1,5 @@
 from .map_types import Zone, HubType, Hub, Link, MapFlyIn, MapError, Cost
-from .algo_types import Plan, Turn, Move, Network
+from .algo_types import Plan, Turn, Move, Network, NoSolutionFind
 
 __all__ = [
     "Zone",
@@ -13,4 +13,5 @@ __all__ = [
     "Move",
     "Cost",
     "Network",
+    "NoSolutionFind",
 ]

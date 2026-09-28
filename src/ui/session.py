@@ -7,7 +7,9 @@ from src.parsing import MapBuilder, MapLoader
 
 
 class MapListener(Protocol):
-    def on_map_loaded(self, map_fly: MapFlyIn, plan: Plan) -> None: ...
+    def on_map_loaded(
+        self, map_fly: MapFlyIn, plan: Plan, curr_map: Path
+    ) -> None: ...
 
 
 class Session:
@@ -23,4 +25,4 @@ class Session:
         map_fly = MapBuilder(MapLoader.load(path)).build()
         plan = self._pathfinder.scheduler(map_fly)
         for listener in self._listeners:
-            listener.on_map_loaded(map_fly, plan)
+            listener.on_map_loaded(map_fly, plan, path)
