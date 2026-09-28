@@ -40,12 +40,3 @@ def main(argv: list[str] | None = None) -> int:
         if gui is not None:
             gui.close()
     return 0
-
-
-if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except Exception as e:
-        print(f"Execpected error occured: {e}")
-    except KeyboardInterrupt:
-        print("Bye ;3")
