@@ -1,15 +1,14 @@
 from .shortest_path_algo import ShortestPathAlgo
 from ..models.algo_types import Network, Plan, Move
+from ..models.map_types import MapFlyIn
 from typing import Type
 
 
 class Pathfinder:
-    def __init__(
-        self, network: Network, pathfinding_algo: Type[ShortestPathAlgo]
-    ) -> None:
-        self.network = network
+    def __init__(self, pathfinding_algo: Type[ShortestPathAlgo]) -> None:
         self.algo = pathfinding_algo
-        self.nb_drones = network.nb_drones
+        self.network: Network
+        self.nb_drones: int = 0
         self.t_max: int | None = None
 
     def ssp(self) -> None:
@@ -38,7 +37,11 @@ class Pathfinder:
             return
         self.t_max = t_max
 
-    def scheduler(self) -> Plan:
+    def scheduler(self, fly_map: MapFlyIn) -> Plan:
+        self.network = Network.from_map(fly_map)
+        self.nb_drones = fly_map.nb_drones
+        self.t_max = None
+        self.ssp()
         routes = self.network.decompose()
         if routes is None or self.t_max is None:
             raise ValueError("The map is not solvable")
@@ -52,11 +55,11 @@ class Pathfinder:
         ]
         slots.sort(key=lambda s: s[:3])
 
-        previous_hub_turn: int = 0
         turns: dict[int, list[Move]] = {}
         for drone_id, (_, _, delay, route) in enumerate(
             slots[: self.nb_drones], 1
         ):
+            previous_hub_turn: int = 0
             for turn, step in route.steps:
                 if turn - previous_hub_turn == 2:
                     turns.setdefault(delay + turn - 1, []).append(

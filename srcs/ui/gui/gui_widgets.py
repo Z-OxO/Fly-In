@@ -86,9 +86,8 @@ class TextWidget(Widget):
 
 
 class DroneWidget(Widget):
-    def __init__(self, pos: Point, color: str, radius: float) -> None:
-        swatch = PALETTE.get(color or "white", PALETTE["white"])
-        self._color: RGB = swatch.fill
+    def __init__(self, pos: Point, color: RGB, radius: float) -> None:
+        self._color: RGB = color
         self._to_pos = self._from_pos = pos
         self._radius: float = radius
         self._t: float = 1

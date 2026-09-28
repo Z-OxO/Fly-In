@@ -1,11 +1,17 @@
 import pygame
+import pygame_gui
+from pathlib import Path
 from pygame import Surface, Clock, Font
 from typing import TypeAlias
 
 from srcs.models import MapFlyIn, Hub, Plan
-from ..renderer import Renderer
 from .gui_widgets import TextWidget, HubWidget, Widget, EdgeWidget, DroneWidget
+from .py_game_gui import THEME
 from .models import Point
+from ..renderer import Renderer
+from srcs.parsing import MapLoader, MapBuilder
+from srcs.models import MapError
+from srcs.algo.pathfinder import Pathfinder
 
 RGB: TypeAlias = tuple[int, int, int]
 
@@ -52,8 +58,8 @@ class ViewPort:
 
 class GuiRenderer(Renderer):
 
-    def __init__(self, fly_map: MapFlyIn, plan: Plan) -> None:
-        super().__init__(fly_map, plan)
+    def __init__(self, fly_map: MapFlyIn, pathfinder: Pathfinder) -> None:
+        super().__init__(fly_map, pathfinder)
 
         pygame.init()
         info = pygame.display.Info()
@@ -61,8 +67,12 @@ class GuiRenderer(Renderer):
         self._screen: Surface = pygame.display.set_mode(
             (int(self._size.x), int(self._size.y))
         )
+        self._ui_manager = pygame_gui.UIManager(
+            (int(self._size.x), int(self._size.y)), theme_path=THEME
+        )
         self._clock: Clock = pygame.time.Clock()
         self._running: bool = True
+        self._turn: int = 0
         self._viewport: ViewPort = ViewPort(
             self._size, list(self._map.hubs.values())
         )
@@ -70,7 +80,7 @@ class GuiRenderer(Renderer):
         self._debug: TextWidget = TextWidget(self._font, Point(10.0, 10.0))
         self._widgets: list[Widget] = self._build_widgets()
         self._position_plan: list[dict[int, Point]] = self._build_positions(
-            fly_map.start_hub.name
+            fly_map.start_hub.name, self._pathfinder.scheduler(fly_map)
         )
 
     @property
@@ -98,17 +108,21 @@ class GuiRenderer(Renderer):
         }
         start = self._viewport.place(self._map.start_hub)
         self._drones = {
-            i: DroneWidget(start, "orange", self._viewport.radius * 0.32)
+            i: DroneWidget(
+                start, (146, 182, 240), self._viewport.radius * 0.32
+            )
             for i in range(1, self._map.nb_drones + 1)
         }
         return edges + list(self._nodes.values()) + list(self._drones.values())
 
-    def _build_positions(self, start: str) -> list[dict[int, Point]]:
+    def _build_positions(
+        self, start: str, plan: Plan
+    ) -> list[dict[int, Point]]:
         current: dict[int, Point] = {
             d: self._nodes[start].pos for d in self._drones
         }
         positions = [dict(current)]
-        for turn in self._plan:
+        for turn in plan:
             for drone_id, label in turn:
                 if "-" in label:
                     u, v = label.split("-")
@@ -119,42 +133,94 @@ class GuiRenderer(Renderer):
             positions.append(dict(current))
         return positions
 
+    def _handle_dropdown(self, path: Path) -> bool:
+        try:
+            lines = MapLoader.load(path)
+            fly_map = MapBuilder(lines).build()
+            plan = self._pathfinder.scheduler(fly_map)
+        except (MapError, ValueError) as e:
+            print(f"{path}: {e}")
+            return False
+
+        self._map = fly_map
+        self._viewport = ViewPort(self._size, list(fly_map.hubs.values()))
+        self._widgets = self._build_widgets()
+        self._position_plan = self._build_positions(
+            fly_map.start_hub.name, plan
+        )
+        return True
+
     def move_drones(self, turn: int) -> None:
         for drone_id, pos in self._position_plan[turn].items():
             self._drones[drone_id].move_to(pos, 0.75)
 
-    def run(self) -> None:
-        turn = 0
+    def _build_dropdown(self) -> None:
+        self._folder = Path("data/maps")
+        self._maps = sorted(
+            p.relative_to(self._folder).as_posix()
+            for p in self._folder.rglob("*.txt")
+            if p.is_file()
+        )
+        options: list[str | tuple[str, str]] = list(self._maps) or [
+            "(aucune map)"
+        ]
+        width = min(420, int(self._size.x * 0.25))
+        height, margin = 40, 20
+        pygame_gui.elements.UIDropDownMenu(
+            options_list=options,
+            starting_option=self._maps[1] if self._maps else "(aucune map)",
+            relative_rect=pygame.Rect(-width - margin, margin, width, height),
+            manager=self._ui_manager,
+            anchors={"right": "right", "top": "top"},
+        )
 
+    def _handle_keys(self, key: int) -> None:
+        if key == pygame.K_RIGHT:
+            self._turn = min(len(self._position_plan) - 1, self._turn + 1)
+            self.move_drones(self._turn)
+        if key == pygame.K_LEFT:
+            self._turn = max(0, self._turn - 1)
+            self.move_drones(self._turn)
+
+    def _handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.QUIT:
+            self._running = False
+        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and self._maps:
+            path = Path(self._folder / event.text)
+            if self._handle_dropdown(path):
+                self._turn = 0
+        elif event.type == pygame.KEYUP:
+            self._handle_keys(event.key)
+        self._ui_manager.process_events(event)
+
+    def _update(self, dt: float) -> None:
+        for widget in self._widgets:
+            widget.update(dt)
+        self._ui_manager.update(dt)
+
+    def _draw(self) -> None:
+        self._screen.fill((14, 17, 17))
+        for widget in self._widgets:
+            widget.draw(self._screen)
+
+        self._debug.set_lines(
+            [
+                f"hubs: {len(self._map.hubs)}",
+                f"links: {len(self._map.links)}",
+                f"drones: {self._map.nb_drones}",
+                f"turns: {self._turn}/{len(self._position_plan) - 1}",
+                f"fps: {self._clock.get_fps():.0f}",
+            ]
+        )
+        self._ui_manager.draw_ui(self._screen)
+        self._debug.draw(self._screen)
+        pygame.display.flip()
+
+    def run(self) -> None:
+        self._build_dropdown()
         while self._running:
             dt = min(self._clock.tick(60) / 1000.0, 0.05)
-
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self._running = False
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_RIGHT:
-                        turn = min(len(self._plan), turn + 1)
-                        self.move_drones(turn)
-                    if event.key == pygame.K_LEFT:
-                        turn = max(0, turn - 1)
-                        self.move_drones(turn)
-
-            for widget in self._widgets:
-                widget.update(dt)
-
-            self._screen.fill((14, 17, 17))
-            for widget in self._widgets:
-                widget.draw(self._screen)
-
-            self._debug.set_lines(
-                [
-                    f"hubs: {len(self._map.hubs)}",
-                    f"links: {len(self._map.links)}",
-                    f"drones: {self._map.nb_drones}",
-                    f"turns: {turn}/{len(self._position_plan) - 1}",
-                    f"fps: {self._clock.get_fps():.0f}",
-                ]
-            )
-            self._debug.draw(self._screen)
-            pygame.display.flip()
+                self._handle_event(event)
+            self._update(dt)
+            self._draw()
