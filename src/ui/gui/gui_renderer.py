@@ -80,11 +80,11 @@ class GuiRenderer(Renderer):
 
     @property
     def current_map_path(self) -> str:
-        return (
-            self._curr_map.relative_to(self._folder).as_posix()
-            if self._maps
-            else "(no map)"
-        )
+        current = self._curr_map.resolve()
+        folder = self._folder.resolve()
+        if current.is_relative_to(folder):
+            return current.relative_to(folder).as_posix()
+        return current.as_posix()
 
     def on_map_loaded(
         self, map_fly: MapFlyIn, plan: Plan, curr_map: Path

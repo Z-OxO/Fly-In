@@ -1,15 +1,12 @@
 import argparse
-import os
 import sys
+
 from pathlib import Path
-
-os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
-
-from src.algo.pathfinder import NoSolutionFind, Pathfinder  # noqa: E402
-from src.algo.shortest_path_algo import Spfa  # noqa: E402
-from src.models import MapError  # noqa: E402
-from src.ui.session import Session  # noqa: E402
-from src.ui.tui.tui_renderer import TuiRenderer  # noqa: E402
+from src.algo.pathfinder import Pathfinder
+from src.algo.shortest_path_algo import Spfa
+from src.models import MapError, NoSolutionFind
+from src.ui.session import Session
+from src.ui.tui.tui_renderer import TuiRenderer
 
 
 def main(argv: list[str] | None = None) -> int:
