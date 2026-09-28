@@ -67,6 +67,7 @@ class GuiRenderer(Renderer):
         self._ui_manager = pygame_gui.UIManager(
             (int(self._size.x), int(self._size.y)), theme_path=THEME
         )
+        self._folder = Path("data/maps")
         self._clock: Clock = pygame.time.Clock()
         self._running: bool = True
         self._turn: int = 0
@@ -93,9 +94,7 @@ class GuiRenderer(Renderer):
         self._turn = 0
         self._viewport = ViewPort(self._size, list(map_fly.hubs.values()))
         self._widgets: list[Widget] = self._build_widgets()
-        self._position_plan: list[dict[int, Point]] = self._build_positions(
-            map_fly.start_hub.name, plan
-        )
+        self._plan = plan
 
     def _build_widgets(self) -> list[Widget]:
         place = self._viewport.place
@@ -125,23 +124,21 @@ class GuiRenderer(Renderer):
         }
         return edges + list(self._nodes.values()) + list(self._drones.values())
 
-    def _build_positions(
-        self, start: str, plan: Plan
-    ) -> list[dict[int, Point]]:
+    def _position_at(
+        self, turn: int
+    ) -> dict[int, Point]:
         current: dict[int, Point] = {
-            d: self._nodes[start].pos for d in self._drones
+            d: self._nodes[self._map.start_hub.name].pos for d in self._drones
         }
-        positions = [dict(current)]
-        for turn in plan:
-            for drone_id, label in turn:
+        for moves in self._plan[:turn]:
+            for drone_id, label in moves:
                 if "-" in label:
                     u, v = label.split("-")
                     (x1, y1), (x2, y2) = self._nodes[u].pos, self._nodes[v].pos
                     current[drone_id] = Point((x1 + x2) / 2, (y1 + y2) / 2)
                 else:
                     current[drone_id] = self._nodes[label].pos
-            positions.append(dict(current))
-        return positions
+        return current
 
     def _handle_dropdown(self, path: Path) -> None:
         try:
@@ -150,11 +147,10 @@ class GuiRenderer(Renderer):
             print(f"{path}: {e}")
 
     def move_drones(self, turn: int) -> None:
-        for drone_id, pos in self._position_plan[turn].items():
+        for drone_id, pos in self._position_at(turn).items():
             self._drones[drone_id].move_to(pos, 0.75)
 
     def _build_dropdown(self) -> None:
-        self._folder = Path("data/maps")
         self._maps = sorted(
             p.relative_to(self._folder).as_posix()
             for p in self._folder.rglob("*.txt")
@@ -175,7 +171,7 @@ class GuiRenderer(Renderer):
 
     def _handle_keys(self, key: int) -> None:
         if key == pygame.K_RIGHT:
-            self._turn = min(len(self._position_plan) - 1, self._turn + 1)
+            self._turn = min(len(self._plan), self._turn + 1)
             self.move_drones(self._turn)
         if key == pygame.K_LEFT:
             self._turn = max(0, self._turn - 1)
@@ -206,7 +202,7 @@ class GuiRenderer(Renderer):
                 f"hubs: {len(self._map.hubs)}",
                 f"links: {len(self._map.links)}",
                 f"drones: {self._map.nb_drones}",
-                f"turns: {self._turn}/{len(self._position_plan) - 1}",
+                f"turns: {self._turn}/{len(self._plan)}",
                 f"fps: {self._clock.get_fps():.0f}",
             ]
         )
