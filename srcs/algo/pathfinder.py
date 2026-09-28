@@ -1,7 +1,13 @@
+from typing import Type
+
 from .shortest_path_algo import ShortestPathAlgo
 from ..models.algo_types import Network, Plan, Move
 from ..models.map_types import MapFlyIn
-from typing import Type
+
+
+class NoSolutionFind(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 
 class Pathfinder:
@@ -37,14 +43,14 @@ class Pathfinder:
             return
         self.t_max = t_max
 
-    def scheduler(self, fly_map: MapFlyIn) -> Plan:
-        self.network = Network.from_map(fly_map)
-        self.nb_drones = fly_map.nb_drones
+    def scheduler(self, map_fly: MapFlyIn) -> Plan:
+        self.network = Network.from_map(map_fly)
+        self.nb_drones = map_fly.nb_drones
         self.t_max = None
         self.ssp()
         routes = self.network.decompose()
         if routes is None or self.t_max is None:
-            raise ValueError("The map is not solvable")
+            raise NoSolutionFind("The map is not solvable")
         routes_caps: list[int] = [
             max(0, self.t_max - route.length + 1) for route in routes
         ]
