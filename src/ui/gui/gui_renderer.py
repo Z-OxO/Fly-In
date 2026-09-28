@@ -159,9 +159,9 @@ class GuiRenderer(Renderer):
             for p in self._folder.rglob("*.txt")
             if p.is_file()
         )
-        options: list[str | tuple[str, str]] = list(self._maps) or [
-            "(aucune map)"
-        ]
+        if self.current_map_path not in self._maps:
+            self._maps.insert(0, self.current_map_path)
+        options: list[str | tuple[str, str]] = list(self._maps)
         width = min(420, int(self._size.x * 0.25))
         height, margin = 40, 20
         pygame_gui.elements.UIDropDownMenu(
