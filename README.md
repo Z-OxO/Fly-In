@@ -1,18 +1,18 @@
 *This project has been created as part of the 42 curriculum by jbenhass.*
 
 <p align="center">
-  <img src="assets/banner.svg" alt="Fly-in: routes a fleet of drones through a network in the fewest turns possible" width="100%">
+  <img src="assets/banner.svg" alt="Fly-in: routes a fleet of drones through a network in the fewest turns possible" width="800">
 </p>
 
 <p align="center">
-  <img src="assets/badges/python.svg" alt="Python 3.10+" height="34">
-  <img src="assets/badges/pygame.svg" alt="pygame-ce" height="34">
-  <img src="assets/badges/mypy.svg" alt="mypy --strict" height="34">
-  <img src="assets/badges/flake8.svg" alt="flake8 clean" height="34">
-  <img src="assets/badges/nograph.svg" alt="No graph library" height="34">
-  <img src="assets/badges/optimal.svg" alt="Optimal on 10/10 maps" height="34">
-  <img src="assets/badges/record.svg" alt="43 turns, record 45" height="34">
-  <img src="assets/badges/42.svg" alt="42 Lyon" height="34">
+  <img src="assets/badges/python.svg" alt="Python 3.10+" height="28">
+  <img src="assets/badges/pygame.svg" alt="pygame-ce" height="28">
+  <img src="assets/badges/mypy.svg" alt="mypy --strict" height="28">
+  <img src="assets/badges/flake8.svg" alt="flake8 clean" height="28">
+  <img src="assets/badges/nograph.svg" alt="No graph library" height="28">
+  <img src="assets/badges/optimal.svg" alt="Optimal on 10/10 maps" height="28">
+  <img src="assets/badges/record.svg" alt="43 turns, record 45" height="28">
+  <img src="assets/badges/42.svg" alt="42 Lyon" height="28">
 </p>
 
 <p align="center">
@@ -130,7 +130,7 @@ scheduling is `O(N log N)`. The plan is computed once per map.
 
 ## Results
 
-<img src="assets/results.svg" alt="Turns per map compared to the subject targets" width="100%">
+<img src="assets/results.svg" alt="Turns per map compared to the subject targets" width="800">
 
 <details>
 <summary>Same results as a table</summary>
@@ -186,7 +186,7 @@ scheduling is `O(N log N)`. The plan is computed once per map.
 
 ## Visualizer
 
-<img src="assets/gui-demo.gif" alt="The visualizer replaying a plan" width="100%">
+<img src="assets/gui-demo.gif" alt="The visualizer replaying a plan" width="720">
 
 - The window replays the plan computed by the algorithm, turn by turn.
 - Hubs use the color from the map file. The ring shows the zone type: light
