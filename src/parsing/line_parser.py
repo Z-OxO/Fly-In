@@ -10,14 +10,34 @@ ALLOWED: dict[str, frozenset[str]] = {
 
 
 class LineParser:
+    """Parse one line of a map file."""
+
     def __init__(self, linenum: int, text: str):
+        """Store the line to parse.
+
+        Args:
+            linenum: Line number, used in errors.
+            text: Line content, without comment.
+        """
         self._linenum = linenum
         self._text = text
 
     def _error(self, msg: str) -> MapError:
+        """Return a MapError for the current line."""
         return MapError(self._linenum, msg)
 
     def _get_zone(self, metadata: dict[str, str]) -> Zone:
+        """Read the zone from the metadata.
+
+        Args:
+            metadata: Parsed metadata.
+
+        Returns:
+            The zone, normal by default.
+
+        Raises:
+            MapError: If the zone is unknown.
+        """
         raw_zone = metadata.get("zone", "normal")
         try:
             zone = Zone(raw_zone)
@@ -29,6 +49,18 @@ class LineParser:
         return zone
 
     def _capacity(self, metadata: dict[str, str], key: str) -> int:
+        """Read a capacity value from the metadata.
+
+        Args:
+            metadata: Parsed metadata.
+            key: Name of the capacity key.
+
+        Returns:
+            The capacity, 1 by default.
+
+        Raises:
+            MapError: If the value is not a positive integer.
+        """
         raw = metadata.get(key)
         if raw is None:
             return 1
@@ -44,6 +76,20 @@ class LineParser:
         keyword: str,
         allowed: frozenset[str],
     ) -> dict[str, str]:
+        """Parse the `[key=value ...]` block of a line.
+
+        Args:
+            bracket: "[" if there is a metadata block, else empty.
+            metadata: Text after the "[".
+            keyword: Directive name, used in errors.
+            allowed: Keys allowed for this directive.
+
+        Returns:
+            The metadata as a dict.
+
+        Raises:
+            MapError: If the block is malformed.
+        """
         if not bracket:
             return {}
         if not allowed:
@@ -77,6 +123,18 @@ class LineParser:
         return metadata_dict
 
     def _coords(self, sx: str, sy: str) -> tuple[int, int]:
+        """Convert the coordinates to integers.
+
+        Args:
+            sx: X as text.
+            sy: Y as text.
+
+        Returns:
+            The (x, y) pair.
+
+        Raises:
+            MapError: If a value is not an integer.
+        """
         try:
             return int(sx), int(sy)
         except ValueError:
@@ -85,6 +143,15 @@ class LineParser:
             ) from None
 
     def _max_drones(self, hub_type: HubType, metadata: dict[str, str]) -> int:
+        """Get the max drones of a hub.
+
+        Args:
+            hub_type: Kind of hub.
+            metadata: Parsed metadata.
+
+        Returns:
+            The capacity, 0 (no limit) for start and end hubs.
+        """
         if hub_type is not HubType.NORMAL:
             return 0
         return self._capacity(metadata, "max_drones")
@@ -92,6 +159,19 @@ class LineParser:
     def _hub(
         self, hub_type: HubType, line_data: str, metadata: dict[str, str]
     ) -> Hub:
+        """Parse a hub line.
+
+        Args:
+            hub_type: Kind of hub.
+            line_data: Text after the ":" (name x y).
+            metadata: Parsed metadata.
+
+        Returns:
+            The new hub.
+
+        Raises:
+            MapError: If the line is malformed.
+        """
         keyword = hub_type.value
         fields = line_data.split()
         if len(fields) != 3:
@@ -115,6 +195,18 @@ class LineParser:
         )
 
     def _link(self, line_data: str, metadata: dict[str, str]) -> Link:
+        """Parse a connection line.
+
+        Args:
+            line_data: Text after the ":" (hub1-hub2).
+            metadata: Parsed metadata.
+
+        Returns:
+            The new link.
+
+        Raises:
+            MapError: If the line is malformed.
+        """
         from_hub, dash, to_hub = line_data.partition("-")
 
         if not dash or "-" in to_hub or " " in line_data:
@@ -132,6 +224,17 @@ class LineParser:
         )
 
     def _nb_drones(self, line_data: str) -> int:
+        """Parse the number of drones.
+
+        Args:
+            line_data: Text after the ":".
+
+        Returns:
+            The number of drones.
+
+        Raises:
+            MapError: If it is not a positive integer.
+        """
         try:
             nb_drones = int(line_data)
         except ValueError:
@@ -144,6 +247,14 @@ class LineParser:
         return nb_drones
 
     def parse(self) -> Hub | Link | int:
+        """Parse the line.
+
+        Returns:
+            A Hub, a Link, or the number of drones.
+
+        Raises:
+            MapError: If the line is invalid.
+        """
         name, _, data = self._text.partition(":")
         data, bracket, metadata = data.partition("[")
 

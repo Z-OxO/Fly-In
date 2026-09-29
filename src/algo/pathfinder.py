@@ -5,13 +5,26 @@ from src.models import Network, Plan, Move, MapFlyIn, NoSolutionFind
 
 
 class Pathfinder:
+    """Compute the move plan of every drone on a map."""
+
     def __init__(self, pathfinding_algo: Type[ShortestPathAlgo]) -> None:
+        """Store the shortest path algorithm to use.
+
+        Args:
+            pathfinding_algo: Class used to find each augmenting path.
+        """
         self.algo = pathfinding_algo
         self.network: Network
         self.nb_drones: int = 0
         self.t_max: int | None = None
 
     def ssp(self) -> None:
+        """Push flow along shortest paths while it lowers the total turns.
+
+        Uses successive shortest paths. Stops when no path is left, when every
+        drone has a path, or when a new path would make the result worse.
+        Saves the best number of turns in `self.t_max`.
+        """
         path_num: int = 0
         sum_of_paths_cost: int = 0
         t_max: int | None = None
@@ -38,6 +51,17 @@ class Pathfinder:
         self.t_max = t_max
 
     def scheduler(self, map_fly: MapFlyIn) -> Plan:
+        """Build the turn by turn plan for all drones.
+
+        Args:
+            map_fly: The parsed map.
+
+        Returns:
+            The plan, one tuple of moves per turn.
+
+        Raises:
+            NoSolutionFind: If no path goes from start to end.
+        """
         self.network = Network.from_map(map_fly)
         self.nb_drones = map_fly.nb_drones
         self.t_max = None

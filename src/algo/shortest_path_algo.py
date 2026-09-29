@@ -6,14 +6,36 @@ from src.models import Cost
 
 
 class ShortestPathAlgo(ABC):
+    """Base class for shortest path algorithms."""
+
     @staticmethod
     @abstractmethod
-    def find_path(network: Network) -> tuple[list[str], int] | None: ...
+    def find_path(network: Network) -> tuple[list[str], int] | None:
+        """Find the cheapest path from source to sink.
+
+        Args:
+            network: The residual network.
+
+        Returns:
+            The list of nodes and the path cost, or None if the sink
+            can't be reached.
+        """
 
 
 class Spfa(ShortestPathAlgo):
+    """Shortest path using SPFA (queue based Bellman-Ford)."""
+
     @staticmethod
     def find_path(network: Network) -> tuple[list[str], int] | None:
+        """Find the cheapest path from source to sink with SPFA.
+
+        Args:
+            network: The residual network.
+
+        Returns:
+            The list of nodes and the path cost, or None if the sink
+            can't be reached.
+        """
         dist: dict[str, Cost] = {network.source: (0, 0)}
         queue: deque[str] = deque()
         queue.append(network.source)
@@ -47,8 +69,19 @@ class Spfa(ShortestPathAlgo):
 
 
 class BellmanFord(ShortestPathAlgo):
+    """Shortest path using the classic Bellman-Ford."""
+
     @staticmethod
     def find_path(network: Network) -> tuple[list[str], int] | None:
+        """Find the cheapest path from source to sink with Bellman-Ford.
+
+        Args:
+            network: The residual network.
+
+        Returns:
+            The list of nodes and the path cost, or None if the sink
+            can't be reached.
+        """
         dist: dict[str, Cost] = {network.source: (0, 0)}
         previous: dict[str, str] = {}
         changed = True

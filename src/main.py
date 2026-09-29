@@ -11,6 +11,14 @@ from src.ui.tui.tui_renderer import TuiRenderer
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Parse the arguments, solve the map and show the result.
+
+    Args:
+        argv: Command line arguments, `sys.argv` is used if None.
+
+    Returns:
+        0 on success, 1 if the map is invalid or has no solution.
+    """
     parser = argparse.ArgumentParser(prog="fly-in")
     parser.add_argument("map", type=Path, help="path to the map file")
     parser.add_argument("--no-gui", action="store_true", help="terminal only")

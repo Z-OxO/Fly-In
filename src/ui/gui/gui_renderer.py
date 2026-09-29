@@ -15,9 +15,18 @@ RGB: TypeAlias = tuple[int, int, int]
 
 
 class ViewPort:
+    """Convert map coordinates to screen coordinates."""
+
     def __init__(
         self, screen_size: Point, hubs: list[Hub], margin: float = 70.0
     ) -> None:
+        """Compute scale and offset so all hubs fit on screen.
+
+        Args:
+            screen_size: Screen size in pixels.
+            hubs: Hubs to fit.
+            margin: Empty space around the map, in pixels.
+        """
 
         max_x = max(hubs, key=lambda x: x.x).x
         max_y = max(hubs, key=lambda x: x.y).y
@@ -44,6 +53,14 @@ class ViewPort:
         ) / 2 - min_y * self._scale
 
     def place(self, hub: Hub) -> Point:
+        """Get the screen position of a hub.
+
+        Args:
+            hub: The hub.
+
+        Returns:
+            Its position in pixels.
+        """
         return Point(
             hub.x * self._scale + self.off_x,
             hub.y * self._scale + self.off_y,
@@ -51,11 +68,19 @@ class ViewPort:
 
     @property
     def radius(self) -> float:
+        """Hub radius in pixels, based on the scale."""
         return max(6.0, min(40.0, self._scale * 0.20))
 
 
 class GuiRenderer(Renderer):
+    """Pygame window that shows the map and the drones."""
+
     def __init__(self, session: Session) -> None:
+        """Open the window and set up the UI.
+
+        Args:
+            session: Session used to load another map.
+        """
 
         pygame.init()
         info = pygame.display.Info()
@@ -76,10 +101,12 @@ class GuiRenderer(Renderer):
 
     @property
     def size(self) -> Point:
+        """Window size in pixels."""
         return self._size
 
     @property
     def current_map_path(self) -> str:
+        """Current map path, relative to the maps folder if possible."""
         current = self._curr_map.resolve()
         folder = self._folder.resolve()
         if current.is_relative_to(folder):
@@ -87,11 +114,19 @@ class GuiRenderer(Renderer):
         return current.as_posix()
 
     def close(self) -> None:
+        """Close pygame."""
         pygame.quit()
 
     def on_map_loaded(
         self, map_fly: MapFlyIn, plan: Plan, curr_map: Path
     ) -> None:
+        """Reset the view for a new map.
+
+        Args:
+            map_fly: The new map.
+            plan: Plan for the drones.
+            curr_map: Path of the map file.
+        """
         self._curr_map = curr_map
         self._map = map_fly
         self._turn = 0
@@ -100,6 +135,11 @@ class GuiRenderer(Renderer):
         self._plan = plan
 
     def _build_widgets(self) -> list[Widget]:
+        """Create the edge, hub and drone widgets.
+
+        Returns:
+            All widgets, in draw order.
+        """
         place = self._viewport.place
         hubs = self._map.hubs
         radius = self._viewport.radius
@@ -137,6 +177,14 @@ class GuiRenderer(Renderer):
         return edges + list(self._nodes.values()) + list(self._drones.values())
 
     def _position_at(self, turn: int) -> dict[int, Point]:
+        """Get the position of every drone at a turn.
+
+        Args:
+            turn: Turn number.
+
+        Returns:
+            Position of each drone by id.
+        """
         current: dict[int, Point] = {
             d: self._nodes[self._map.start_hub.name].pos for d in self._drones
         }
@@ -151,16 +199,29 @@ class GuiRenderer(Renderer):
         return current
 
     def _handle_dropdown(self, path: Path) -> None:
+        """Load the map picked in the dropdown.
+
+        Errors are printed and the current map stays.
+
+        Args:
+            path: Path of the map to load.
+        """
         try:
             self._session.load(path)
         except (MapError, NoSolutionFind, ValueError) as e:
             print(f"{path}: {e}")
 
     def move_drones(self, turn: int) -> None:
+        """Animate the drones to their position at a turn.
+
+        Args:
+            turn: Target turn.
+        """
         for drone_id, pos in self._position_at(turn).items():
             self._drones[drone_id].move_to(pos, 0.75)
 
     def _build_dropdown(self) -> None:
+        """Create the dropdown to pick a map."""
         self._maps = sorted(
             p.relative_to(self._folder).as_posix()
             for p in self._folder.rglob("*.txt")
@@ -180,6 +241,11 @@ class GuiRenderer(Renderer):
         )
 
     def _handle_keys(self, key: int) -> None:
+        """Go to the next or previous turn with the arrows.
+
+        Args:
+            key: Released key.
+        """
         if key == pygame.K_RIGHT:
             self._turn = min(len(self._plan), self._turn + 1)
             self.move_drones(self._turn)
@@ -188,6 +254,11 @@ class GuiRenderer(Renderer):
             self.move_drones(self._turn)
 
     def _handle_event(self, event: pygame.event.Event) -> None:
+        """Handle one pygame event.
+
+        Args:
+            event: The event.
+        """
         if event.type == pygame.QUIT:
             self._running = False
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and self._maps:
@@ -198,11 +269,17 @@ class GuiRenderer(Renderer):
         self._ui_manager.process_events(event)
 
     def _update(self, dt: float) -> None:
+        """Update the widgets and the UI.
+
+        Args:
+            dt: Time since last frame, in seconds.
+        """
         for widget in self._widgets:
             widget.update(dt)
         self._ui_manager.update(dt)
 
     def _draw(self) -> None:
+        """Draw the frame and the info text."""
         self._screen.fill((14, 17, 17))
         for widget in self._widgets:
             widget.draw(self._screen)
@@ -221,6 +298,7 @@ class GuiRenderer(Renderer):
         pygame.display.flip()
 
     def run(self) -> None:
+        """Run the main loop until the window is closed."""
         self._build_dropdown()
         while self._running:
             dt = min(self._clock.tick(60) / 1000.0, 0.05)
