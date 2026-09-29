@@ -43,14 +43,24 @@ class EdgeWidget(Widget):
 
 class HubWidget(Widget):
     def __init__(
-        self, pos: Point, color: str | None, zone: Zone, radius: float
+        self,
+        pos: Point,
+        color: str | None,
+        font: Font,
+        zone: Zone,
+        radius: float,
+        cap: int,
     ) -> None:
         super().__init__()
+        self._font = font
         self.pos: Point = pos
         swatch = self._palette.get(color or "white", self._palette["white"])
         self._fill_color: RGB = swatch.fill
         self._ring_color, self._ring_width = ZONE_STYLE[zone]
         self._radius: float = radius
+        self._cap = str(cap) if cap != 0 else "∞"
+        self._label = font.render(self._cap, True, "black")
+        self._label_rect = self._label.get_rect(center=pos)
 
     def draw(self, surface: Surface) -> None:
         pygame.draw.aacircle(surface, self._fill_color, self.pos, self._radius)
@@ -61,6 +71,7 @@ class HubWidget(Widget):
             self._radius,
             self._ring_width,
         )
+        surface.blit(self._label, self._label_rect)
 
 
 class TextWidget(Widget):

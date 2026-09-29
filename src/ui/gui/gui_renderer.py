@@ -114,8 +114,17 @@ class GuiRenderer(Renderer):
             )
             for link in self._map.links.values()
         ]
+        radius = self._viewport.radius
+        hub_font = pygame.font.SysFont("monospace", max(1, int(radius)))
         self._nodes: dict[str, HubWidget] = {
-            name: HubWidget(place(hub), hub.color, hub.zone, radius)
+            name: HubWidget(
+                place(hub),
+                hub.color,
+                hub_font,
+                hub.zone,
+                radius,
+                hub.max_drones,
+            )
             for name, hub in hubs.items()
         }
         start = self._viewport.place(self._map.start_hub)
@@ -127,9 +136,7 @@ class GuiRenderer(Renderer):
         }
         return edges + list(self._nodes.values()) + list(self._drones.values())
 
-    def _position_at(
-        self, turn: int
-    ) -> dict[int, Point]:
+    def _position_at(self, turn: int) -> dict[int, Point]:
         current: dict[int, Point] = {
             d: self._nodes[self._map.start_hub.name].pos for d in self._drones
         }
